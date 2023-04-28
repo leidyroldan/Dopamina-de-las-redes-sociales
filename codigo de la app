@@ -1,0 +1,78 @@
+class SocialMediaBlocker {
+  constructor(interval, phrases) {
+    this.interval = interval;
+    this.phrases = phrases;
+    this.db_conn = window.localStorage;
+    this.create_table();
+    this.registered_users = [];
+  }
+
+  create_table() {
+    // Create the time_spent and user_data tables in local storage
+    const time_spent_table = JSON.parse(this.db_conn.getItem("time_spent"));
+    if (!time_spent_table) {
+      const initialTable = {};
+      this.db_conn.setItem("time_spent", JSON.stringify(initialTable));
+    }
+
+    const user_data_table = JSON.parse(this.db_conn.getItem("user_data"));
+    if (!user_data_table) {
+      const initialTable = [];
+      this.db_conn.setItem("user_data", JSON.stringify(initialTable));
+    }
+  }
+
+  register_user(name, email, photo_url, location) {
+    // Register user with the given details and add to registered_users list
+    const user_data_table = JSON.parse(this.db_conn.getItem("user_data"));
+    const user = { name, email, photo_url, location, social_network_times: [] };
+    user_data_table.push(user);
+    this.db_conn.setItem("user_data", JSON.stringify(user_data_table));
+    this.registered_users.push(email);
+  }
+
+  update_user_profile(email, new_photo_url, new_location) {
+    // Update the user's photo and location in local storage
+    const user_data_table = JSON.parse(this.db_conn.getItem("user_data"));
+    const user_index = user_data_table.findIndex((user) => user.email === email);
+    user_data_table[user_index].photo_url = new_photo_url;
+    user_data_table[user_index].location = new_location;
+    this.db_conn.setItem("user_data", JSON.stringify(user_data_table));
+  }
+
+  send_notification(email) {
+    // Send motivational notification to the user with the given email
+    const user_data_table = JSON.parse(this.db_conn.getItem("user_data"));
+    const user_index = user_data_table.findIndex((user) => user.email === email);
+    const phraseIndex = Math.floor(Math.random() * this.phrases.length);
+    const notification = { 
+      timestamp: new Date().toISOString(),
+      message: this.phrases[phraseIndex]
+    };
+    user_data_table[user_index].notifications.push(notification);
+    this.db_conn.setItem("user_data", JSON.stringify(user_data_table));
+  }
+
+  block_social_media(email) {
+    // Use device management API to block social media access for the user with the given email
+    // ...
+    // Record start time
+    const start_time = new Date().getTime();
+    let interval_id = setInterval(() => {
+      // Check current time
+      const current_time = new Date().getTime();
+      // If interval has passed, unblock social media access and update time spent
+      if (current_time - start_time >= this.interval) {
+        // Use device management API to unblock social media access
+        // ...
+        // Record time spent on social media application
+        const time_spent = current_time - start_time;
+        const time_spent_table = JSON.parse(this.db_conn.getItem("time_spent"));
+        const user_data_table = JSON.parse(this.db_conn.getItem("user_data"));
+        const user_index = user_data_table.findIndex((user) => user.email === email);
+        const app_name = "Facebook"; // Replace with actual app name
+        if (!time_spent_table[app_name]) {
+          time_spent_table[app_name] = 0;
+        }
+        time_spent_table[app_name] += time_spent;
+        user_data_table[user_index
